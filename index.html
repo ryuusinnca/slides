@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unity AIコーディングのエラー自動修正環境構築</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/theme/white.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css">
+    <style>
+        .reveal {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            line-height: 1.4;
+            color: #333;
+        }
+
+        .reveal h1, .reveal h2, .reveal h3 {
+            text-transform: none;
+        }
+
+        .reveal h1 {
+            font-size: 1.4em;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 6px;
+            margin-bottom: 12px;
+        }
+
+        .reveal h2 {
+            font-size: 1.0em;
+            color: #333;
+            margin: 8px 0 6px;
+        }
+
+        .reveal h3 {
+            font-size: 0.9em;
+            color: #555;
+            margin: 6px 0 4px;
+        }
+
+        .reveal p {
+            margin: 4px 0;
+            font-size: 0.8em;
+        }
+
+        .reveal section {
+            text-align: left;
+            padding: 30px 50px;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .reveal ul, .reveal ol {
+            display: block;
+            margin: 4px 0 4px 20px;
+            font-size: 0.8em;
+        }
+
+        .reveal li {
+            margin: 3px 0;
+        }
+
+        /* Code blocks */
+        .reveal pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Fira Code', 'Source Code Pro', Consolas, monospace;
+            font-size: 0.5em;
+            line-height: 1.15;
+            margin: 6px 0;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .reveal pre:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+
+        .reveal code {
+            background: #e8e8e8;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-family: 'Fira Code', 'Source Code Pro', Consolas, monospace;
+            font-size: 0.85em;
+        }
+
+        .reveal pre code {
+            background: none;
+            padding: 0;
+            font-size: 1em;
+        }
+
+        /* Code line highlight animation */
+        .reveal pre code .hljs-ln-line.highlight-line {
+            background: rgba(102, 126, 234, 0.3);
+            display: block;
+            margin: 0 -12px;
+            padding: 0 12px;
+            animation: lineHighlight 0.5s ease;
+        }
+
+        @keyframes lineHighlight {
+            from { background: rgba(102, 126, 234, 0.6); }
+            to { background: rgba(102, 126, 234, 0.3); }
+        }
+
+        /* Highlight boxes */
+        .highlight-box {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            border-left: 4px solid #667eea;
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.75em;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .highlight-box:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .highlight-box.success {
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, #f0fff4 0%, #dcffe4 100%);
+        }
+
+        .highlight-box.warning {
+            border-left-color: #ffc107;
+            background: linear-gradient(135deg, #fffef0 0%, #fff8dc 100%);
+        }
+
+        .highlight-box.info {
+            border-left-color: #17a2b8;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        }
+
+        /* Diagram */
+        .diagram {
+            background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 10px 15px;
+            margin: 8px 0;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .diagram .flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .diagram .box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.7em;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .diagram .box:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .diagram .box.secondary {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+
+        .diagram .box.secondary:hover {
+            box-shadow: 0 8px 20px rgba(40, 167, 69, 0.5);
+        }
+
+        .diagram .arrow {
+            font-size: 1.4em;
+            color: #999;
+            animation: arrowPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes arrowPulse {
+            0%, 100% { opacity: 0.6; transform: translateX(0); }
+            50% { opacity: 1; transform: translateX(3px); }
+        }
+
+        /* Table */
+        .reveal table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 6px 0;
+            font-size: 0.7em;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .reveal th, .reveal td {
+            border: 1px solid #ddd;
+            padding: 5px 8px;
+            text-align: left;
+            transition: background 0.3s ease;
+        }
+
+        .reveal th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .reveal tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .reveal tr:hover td {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        /* Title slide */
+        .title-slide {
+            text-align: center !important;
+        }
+
+        .title-slide h1 {
+            font-size: 1.8em !important;
+            border: none !important;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: titleGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+            50% { text-shadow: 2px 2px 20px rgba(255,255,255,0.5), 2px 2px 4px rgba(0,0,0,0.3); }
+        }
+
+        .title-slide .subtitle {
+            font-size: 1.0em;
+            opacity: 0.9;
+        }
+
+        .title-slide .presenter {
+            margin-top: 25px;
+            font-size: 0.95em;
+            opacity: 0.95;
+        }
+
+        .title-slide .date {
+            margin-top: 6px;
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        /* Fragment animations */
+        .reveal .slides section .fragment {
+            transition: all 0.4s ease;
+        }
+
+        .reveal .slides section .fragment.fade-up {
+            transform: translateY(20px);
+        }
+
+        .reveal .slides section .fragment.fade-up.visible {
+            transform: translateY(0);
+        }
+
+        .reveal .slides section .fragment.grow {
+            transform: scale(0.9);
+        }
+
+        .reveal .slides section .fragment.grow.visible {
+            transform: scale(1);
+        }
+
+        .reveal .slides section .fragment.highlight-current-blue.visible {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        /* Animated list items */
+        .reveal .animated-list li {
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.5s ease;
+        }
+
+        .reveal .animated-list li.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Typing animation for code */
+        .typing-effect {
+            overflow: hidden;
+            border-right: 2px solid #667eea;
+            white-space: nowrap;
+            animation: typing 2s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: #667eea; }
+        }
+
+        /* Pulse animation for important elements */
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        /* Slide number styling */
+        .reveal .slide-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px 0 0 0;
+            font-size: 14px;
+        }
+
+        /* Progress bar */
+        .reveal .progress {
+            background: rgba(0,0,0,0.1);
+            height: 4px;
+        }
+
+        .reveal .progress span {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.8s ease;
+        }
+
+        /* Custom animations for demo slides */
+        .demo-terminal {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .demo-terminal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* Step indicator animation */
+        .step-indicator {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-weight: bold;
+            font-size: 0.8em;
+            margin-right: 8px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Slide 1: Title -->
+            <section class="title-slide" data-background="linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+                <h1 style="color: white;">Unity AIコーディングの<br>エラー自動修正環境構築</h1>
+                <p class="subtitle" style="color: white;">MCP (Model Context Protocol) を活用した<br>開発効率化の取り組み</p>
+                <p class="presenter" style="color: white;">Takuma Ando</p>
+                <p class="date" style="color: white;">2025年1月</p>
+            </section>
+
+            <!-- Slide 2: 課題 -->
+            <section>
+                <h1>課題</h1>
+                <ul>
+                    <li>AIアシスタント（Claude Code、GitHub Copilot）でC#コードを編集</li>
+                    <li>しかし、Unity Editorに戻らないとコンパイルエラーが分からない</li>
+                    <li>エラー発見→AI修正→確認の往復が非効率</li>
+                </ul>
+                <div class="highlight-box warning">
+                    <strong>問題:</strong> AIとUnity Editorの間で手動の往復作業が発生
+                </div>
+            </section>
+
+            <!-- Slide 3: 解決策とゴール -->
+            <section>
+                <h1>解決策とゴール</h1>
+                <div class="highlight-box success pulse">
+                    <strong>MCP (Model Context Protocol)</strong> を導入し、AIアシスタントから直接Unity Editorを操作可能にする
+                </div>
+                <h2>ゴール</h2>
+                <div class="diagram">
+                    <div class="flow">
+                        <div class="box">C#編集</div>
+                        <span class="arrow">→</span>
+                        <div class="box secondary">自動コンパイル</div>
+                        <span class="arrow">→</span>
+                        <div class="box secondary">エラーチェック</div>
+                        <span class="arrow">→</span>
+                        <div class="box">自動修正</div>
+                    </div>
+                </div>
+                <p style="text-align: center; color: #666;">すべてAIアシスタント内で完結</p>
+            </section>
+
+            <!-- Slide 4: MCPとは -->
+            <section>
+                <h1>MCP (Model Context Protocol) とは</h1>
+                <p>Anthropic社が提唱するAIと外部ツールを接続するためのオープンプロトコル。</p>
+                <div class="highlight-box info">
+                    AIアシスタントが「ツール」として外部システムを呼び出せる仕組み
+                </div>
+                <div class="diagram">
+                    <div class="flow">
+                        <div class="box">AIアシスタント</div>
+                        <span class="arrow">↔</span>
+                        <div class="box secondary">MCP Server</div>
+                        <span class="arrow">↔</span>
+                        <div class="box">外部ツール<br>(Unity等)</div>
+                    </div>
+                </div>
+                <h2>特徴</h2>
+                <ul>
+                    <li>標準化されたプロトコル（JSON-RPC 2.0ベース）</li>
+                    <li>様々なAIツールで利用可能 / 拡張性が高い</li>
+                </ul>
+            </section>
+
+            <!-- Slide 5: 採用パッケージ -->
+            <section>
+                <h1>採用パッケージ: mcp-unity</h1>
+                <table>
+                    <tr><th>項目</th><th>内容</th></tr>
+                    <tr><td>リポジトリ</td><td>github.com/CoderGamester/mcp-unity</td></tr>
+                    <tr><td>提供機能</td><td>シーン操作、GameObject操作、リコンパイル、ログ取得</td></tr>
+                    <tr><td>通信方式</td><td>WebSocket ↔ Node.js MCP Server ↔ AI</td></tr>
+                </table>
+                <h2>選定理由</h2>
+                <ul>
+                    <li>豊富な標準ツール（30以上）</li>
+                    <li>拡張が容易（カスタムツール追加可能）</li>
+                    <li>アクティブにメンテナンスされている</li>
+                </ul>
+            </section>
+
+            <!-- Slide 6: 環境構築 Step 1-2 -->
+            <section>
+                <h1>環境構築 (1/3)</h1>
+                <h2><span class="step-indicator">1</span>Node.js のインストール</h2>
+                <pre><code class="language-bash"># Homebrewでインストール
+brew install node@20
+node --version  # v20.x.x</code></pre>
+                <h2><span class="step-indicator">2</span>Unity パッケージの追加</h2>
+                <p><code>Packages/manifest.json</code> に追加：</p>
+                <pre><code class="language-json">{
+  "dependencies": {
+    "com.gamelovers.mcp-unity": "https://github.com/CoderGamester/mcp-unity.git"
+  }
+}</code></pre>
+            </section>
+
+            <!-- Slide 7: 環境構築 Step 3 -->
+            <section>
+                <h1>環境構築 (2/3)</h1>
+                <h2><span class="step-indicator">3</span>MCP Server のビルド</h2>
+                <pre><code class="language-bash"># パッケージディレクトリに移動
+cd Library/PackageCache/com.gamelovers.mcp-unity@*/Server~
+
+# 依存関係インストール & ビルド
+npm install && npm run build</code></pre>
+                <h2><span class="step-indicator">4</span>Claude Code 用設定ファイル作成</h2>
+                <p>プロジェクトルートに <code>.mcp.json</code> を作成：</p>
+                <pre><code class="language-json">{
+  "mcpServers": {
+    "mcp-unity": {
+      "command": "node",
+      "args": ["Library/.../Server~/build/index.js"]
+    }
+  }
+}</code></pre>
+            </section>
+
+            <!-- Slide 8: 環境構築 Step 5 -->
+            <section>
+                <h1>環境構築 (3/3)</h1>
+                <h2><span class="step-indicator">5</span>Unity 側の MCP Server 起動</h2>
+                <ol>
+                    <li>Unity Editorを起動</li>
+                    <li>メニュー: <strong>Tools > MCP Unity > Server</strong></li>
+                    <li><strong>Start Server</strong> をクリック</li>
+                </ol>
+                <div class="diagram">
+                    <div class="flow">
+                        <div class="box">Unity</div>
+                        <span class="arrow">↔</span>
+                        <div class="box secondary">WebSocket</div>
+                        <span class="arrow">↔</span>
+                        <div class="box">MCP Server</div>
+                        <span class="arrow">↔</span>
+                        <div class="box secondary">Claude Code</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 9: MCPコマンドの拡張 -->
+            <section>
+                <h1>MCPコマンドの拡張</h1>
+                <h2>課題: Play Mode 操作が標準未対応</h2>
+                <p>mcp-unityの標準機能にPlay/Pause/Stop操作がなかったため、独自拡張を実装。</p>
+                <pre><code class="language-csharp">public class PlayModeTool : McpToolBase
+{
+    public override JObject Execute(JObject p) {
+        switch (p["action"]?.ToString()) {
+            case "enter": EditorApplication.EnterPlaymode(); break;
+            case "exit":  EditorApplication.ExitPlaymode();  break;
+        }
+    }
+}</code></pre>
+            </section>
+
+            <!-- Slide 10: Play Mode アクション -->
+            <section>
+                <h1>Play Mode 利用可能アクション</h1>
+                <table>
+                    <tr><th>アクション</th><th>説明</th></tr>
+                    <tr><td><code>enter</code> / <code>play</code></td><td>Play Modeを開始</td></tr>
+                    <tr><td><code>exit</code> / <code>stop</code></td><td>Play Modeを終了</td></tr>
+                    <tr><td><code>pause</code></td><td>一時停止/再開をトグル</td></tr>
+                    <tr><td><code>step</code></td><td>1フレーム進める</td></tr>
+                    <tr><td><code>status</code></td><td>現在の状態を取得</td></tr>
+                </table>
+                <h2>使用例</h2>
+                <pre><code class="language-bash">mcp__mcp-unity__play_mode  action: enter  # 再生開始
+mcp__mcp-unity__play_mode  action: exit   # 停止</code></pre>
+            </section>
+
+            <!-- Slide 11: 自動エラー修正ワークフロー -->
+            <section>
+                <h1>自動エラー修正ワークフロー</h1>
+                <div class="diagram">
+                    <div class="flow">
+                        <div class="box">C#編集</div>
+                        <span class="arrow">→</span>
+                        <div class="box secondary">recompile</div>
+                        <span class="arrow">→</span>
+                        <div class="box">エラー確認</div>
+                        <span class="arrow">→</span>
+                        <div class="box secondary">自動修正</div>
+                    </div>
+                </div>
+                <h2>.ai-context/unity-mcp-workflow.md を作成</h2>
+                <p>AIアシスタントがUnity MCPを使用する際のワークフローを定義</p>
+            </section>
+
+            <!-- Slide 12: unity-mcp-workflow.md (1/2) -->
+            <section>
+                <h1 style="font-size:1.2em; margin-bottom:4px; padding-bottom:4px;">unity-mcp-workflow.md (1/2)</h1>
+                <pre><code># Unity MCP ワークフロー
+Unity MCP（Model Context Protocol）は、AIアシスタントがUnity Editorを直接操作できるようにするブリッジです。
+
+## 前提条件
+- Unity Editorが起動していること
+- MCP Serverが起動していること（Unity: Tools > MCP Unity > Server）
+- Node.js 18以上がインストールされていること
+
+## 利用可能なMCPツール
+### スクリプトコンパイル
+- ツール名: recompile_scripts / 用途: C#スクリプト変更後のコンパイル実行 / 戻り値: コンパイル結果とログ
+
+### コンソールログ取得
+- ツール名: get_console_logs / 用途: Unity Consoleのログを取得
+- パラメータ: logType (info|warning|error), limit (デフォルト50), includeStackTrace
+
+### Play Mode制御
+- ツール名: play_mode / 用途: Unity EditorのPlay/Pause/Stop制御
+- パラメータ: action (enter/play | exit/stop | toggle | pause | step | status)
+
+### シーン情報取得・コンソールメッセージ送信
+- get_scene_info: 現在のシーン情報を取得
+- send_console_log: Unity Consoleにメッセージを送信 (message, type)</code></pre>
+            </section>
+
+            <!-- Slide 13: unity-mcp-workflow.md (2/2) -->
+            <section>
+                <h1 style="font-size:1.2em; margin-bottom:4px; padding-bottom:4px;">unity-mcp-workflow.md (2/2)</h1>
+                <pre><code>## コード変更後のワークフロー
+### 基本フロー
+1. スクリプトをリコンパイル (recompile_scripts)
+2. コンパイル結果を確認
+3. エラーがあれば修正して再度1から実行
+4. エラーがなくなるまで繰り返す
+
+## エラー修正ループの実装
+1. C#スクリプトを編集
+2. recompile_scripts を実行
+3. 結果を確認
+   - 成功 → 完了
+   - 失敗 → エラーログを解析
+4. エラーがある場合：
+   a. エラーメッセージからファイルパスと行番号を抽出
+   b. 該当ファイルを読み込む
+   c. エラーを修正
+   d. 手順2に戻る
+5. 最大試行回数（5回）を超えたら、ユーザーに報告
+
+## 注意事項
+- Play Mode中はスクリプトのリコンパイル不可 → 先に play_mode で exit してからリコンパイル
+- ログ取得時は includeStackTrace: false で80-90%トークン節約
+
+## カスタム拡張
+MCP Unityにカスタムツールを追加する場合は Assets/Anima/Editor/McpUnityExtension/ に配置</code></pre>
+            </section>
+
+            <!-- Slide 14: 動作確認デモ (1/2) -->
+            <section>
+                <h1>動作確認デモ: エラー検出 (1/2)</h1>
+                <p style="margin-bottom:8px;">意図的にコンパイルエラーを発生させ、MCPで検出・修正するテスト</p>
+                <div class="demo-terminal" style="background:#0d1117; color:#d4d4d4; padding:10px 14px; border-radius:8px; font-family:monospace; font-size:0.55em; line-height:1.4; border: 1px solid #30363d;">
+                    <div style="color:#6a9955;">// Step 1: 意図的なエラーを挿入</div>
+                    <div><span style="color:#569cd6;">Claude</span> <span style="color:#808080;">→ Edit WaitForCompilationTool.cs</span></div>
+                    <pre style="background:#161b22; margin:4px 0; padding:4px 8px; font-size:1em; color:#ce9178; border-radius:4px;">+ var testError = ThisMethodDoesNotExist();  // 存在しないメソッド</pre>
+                    <div style="margin-top:10px; color:#6a9955;">// Step 2: リコンパイル実行</div>
+                    <div><span style="color:#569cd6;">Claude</span> <span style="color:#808080;">→ mcp__mcp-unity__recompile_scripts</span></div>
+                    <div style="margin-top:6px; background:#2d1f1f; padding:6px 10px; border-radius:4px; border-left:3px solid #f44336;">
+                        <span style="color:#f44336;">✗ Recompilation completed with 1 error(s)</span><br>
+                        <span style="color:#ffab91;">WaitForCompilationTool.cs(64,29): error CS0103:</span><br>
+                        <span style="color:#ccc;">The name 'ThisMethodDoesNotExist' does not exist in the current context</span>
+                    </div>
+                </div>
+                <div class="highlight-box warning" style="margin-top:10px;">
+                    <strong>ポイント:</strong> AIがコンパイルエラーを即座に検出。ファイル名・行番号・エラー内容を取得
+                </div>
+            </section>
+
+            <!-- Slide 15: 動作確認デモ (2/2) -->
+            <section>
+                <h1>動作確認デモ: エラー修正 (2/2)</h1>
+                <div class="demo-terminal" style="background:#0d1117; color:#d4d4d4; padding:8px 12px; border-radius:8px; font-family:monospace; font-size:0.5em; line-height:1.3; border: 1px solid #30363d;">
+                    <div style="color:#6a9955;">// Step 3: エラーを修正（問題の行を削除）</div>
+                    <div><span style="color:#569cd6;">Claude</span> <span style="color:#808080;">→ Edit WaitForCompilationTool.cs</span></div>
+                    <pre style="background:#161b22; margin:3px 0; padding:3px 6px; font-size:1em; color:#ce9178; border-radius:4px;">- var testError = ThisMethodDoesNotExist();  // 削除</pre>
+                    <div style="margin-top:8px; color:#6a9955;">// Step 4: 再コンパイルで確認</div>
+                    <div><span style="color:#569cd6;">Claude</span> <span style="color:#808080;">→ mcp__mcp-unity__recompile_scripts</span></div>
+                    <div style="margin-top:5px; background:#1f2d1f; padding:5px 8px; border-radius:4px; border-left:3px solid #4caf50;">
+                        <span style="color:#4caf50;">✓ Successfully recompiled all scripts with 0 warning(s)</span><br>
+                        <span style="color:#ccc;">{ "logs": [] }</span>
+                    </div>
+                </div>
+                <table style="font-size:0.6em; margin-top:8px;">
+                    <tr><th>ステップ</th><th>操作</th><th>結果</th></tr>
+                    <tr><td><span class="step-indicator">1</span>エラー挿入</td><td>Edit ツール</td><td>存在しないメソッド追加</td></tr>
+                    <tr><td><span class="step-indicator">2</span>コンパイル</td><td><code>recompile_scripts</code></td><td style="color:#f44336;">✗ error CS0103 検出</td></tr>
+                    <tr><td><span class="step-indicator">3</span>修正</td><td>Edit ツール</td><td>問題の行を削除</td></tr>
+                    <tr><td><span class="step-indicator">4</span>再コンパイル</td><td><code>recompile_scripts</code></td><td style="color:#4caf50;">✓ エラー0件</td></tr>
+                </table>
+                <div class="highlight-box success" style="margin-top:6px;">
+                    <strong>結論:</strong> エラー検出 → 修正 → 再確認 のループがAI内で完結！
+                </div>
+            </section>
+
+            <!-- Slide 16: まとめ -->
+            <section>
+                <h1>まとめ</h1>
+                <h2>実現したこと</h2>
+                <ul>
+                    <li><strong>MCP Unity</strong> パッケージの導入</li>
+                    <li><strong>Play Mode拡張</strong>（独自実装）</li>
+                    <li><strong>自動コンパイル・エラーチェック</strong>ワークフロー</li>
+                </ul>
+                <h2>Before / After</h2>
+                <table>
+                    <tr><th>Before</th><th>After</th></tr>
+                    <tr><td>手動で往復が必要</td><td>AI内で完結</td></tr>
+                </table>
+                <h2>参考情報</h2>
+                <ul>
+                    <li><strong>MCP Unity:</strong> github.com/CoderGamester/mcp-unity</li>
+                    <li><strong>プロジェクト内:</strong> .ai-context/unity-mcp-workflow.md</li>
+                </ul>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/highlight/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/zoom/zoom.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            plugins: [ RevealHighlight, RevealZoom ],
+
+            // Transition settings
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+
+            // Size settings
+            width: 1200,
+            height: 675,
+            margin: 0,
+            center: false,
+
+            // Fragment settings
+            fragments: true,
+            fragmentInURL: true,
+
+            // Auto-animate settings
+            autoAnimate: true,
+            autoAnimateEasing: 'ease-out',
+            autoAnimateDuration: 0.8,
+            autoAnimateUnmatched: false,
+
+            // Navigation
+            controls: true,
+            controlsTutorial: true,
+            controlsLayout: 'bottom-right',
+            progress: true,
+
+            // Keyboard shortcuts
+            keyboard: true,
+
+            // Touch navigation
+            touch: true,
+
+            // Loop presentation
+            loop: false,
+
+            // Highlight code line numbers
+            highlight: {
+                highlightOnLoad: true,
+                lineNumbers: true
+            }
+        });
+
+        // Add custom fragment animation on slide change
+        Reveal.on('slidechanged', event => {
+            // Add entrance animation to diagram boxes
+            const boxes = event.currentSlide.querySelectorAll('.diagram .box');
+            boxes.forEach((box, index) => {
+                box.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+
+        // Keyboard shortcut for overview mode
+        Reveal.addKeyBinding({ keyCode: 79, key: 'O', description: 'Overview mode' }, () => {
+            Reveal.toggleOverview();
+        });
+    </script>
+</body>
+</html>
